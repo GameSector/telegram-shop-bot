@@ -32,14 +32,8 @@ app.add_handler(CommandHandler("catalog", catalog_cmd))
 app.add_handler(MessageHandler(filters.TEXT, handle))
 
 app.run_polling(pip3 install python-telegram-bot --upgrade
-cursh if> 
-cursh if> 
-cursh if> pip3 install python-telegram-bot --upgrade
-cursh if> python3 bot.py
-cursh if> python3 bot.py
-cursh if> python3 bot.py
-cursh if> python3 bot.py
-cursh if> 
+
+
 
 
 
