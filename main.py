@@ -19,7 +19,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Привет! 👋\nНапиши /catalog для просмотра товаров")
 
 async def catalog_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [[cat] for cat in catalog.keys()]
+    keys = list(catalog.keys())
+    keyboard = [[keys[i], keys[i+1]] for i in range(0, len(keys), 2)]
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     await update.message.reply_text("Выбери категорию:", reply_markup=reply_markup)
 
