@@ -6,15 +6,14 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 
 catalog = {
-    "Клавиатуры": [
-        {"name": "Офисная клавиатура", "price": "500 грн", "desc": "Тиха, механическая"},
-        {"name": "RGB клавиатура", "price": "1500 грн", "desc": "RGB, механическая"}
-    ],
-    "Мышки": [
-        {"name": "Игровая мышь", "price": "800 грн", "desc": "Подсветка"},
-        {"name": "Беспроводная мышь", "price": "600 грн", "desc": "Без проводов"}
-    ]
+    "1": {"name": "Ajazz AK820 White"},
+    "2": {"name": "Ajazz AK820 Grey White"},
+    "3": {"name": "AJAZZ NK61 Black"},
+    "4": {"name": "AJAZZ NK61 White"},
+    "5": {"name": "FREEWOLF M75 Grey-White"},
+    "6": {"name": "Attack Shark X68 HE"},
 }
+   
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Привет! 👋\nНапиши /catalog для просмотра товаров")
