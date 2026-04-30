@@ -6,12 +6,12 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 
 catalog = {
-    "1": {"name": "Ajazz AK820 White"},
-    "2": {"name": "Ajazz AK820 Grey White"},
-    "3": {"name": "AJAZZ NK61 Black"},
-    "4": {"name": "AJAZZ NK61 White"},
-    "5": {"name": "FREEWOLF M75 Grey-White"},
-    "6": {"name": "Attack Shark X68 HE"},
+    "Ajazz AK820 White": {"desc": "Механическая клавиатура с белым корпусом"},
+    "Ajazz AK820 Grey White": {"desc": "Механическая клавиатура серо-белая"},
+    "AJAZZ NK61 Black": {"desc": "Компактная механическая клавиатура черная"},
+    "AJAZZ NK61 White": {"desc": "Компактная механическая клавиатура белая"},
+    "FREEWOLF M75 Grey-White": {"desc": "Игровая механическая клавиатура серо-белая"},
+    "Attack Shark X68 HE": {"desc": "Профессиональная игровая клавиатура"},
 }
    
 
@@ -28,9 +28,9 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     if text in catalog:
         product = catalog[text]
-        msg = f"📦 {product['name']}"
+        msg = f"⌨️ {text}\n\n📝 {product['desc']}"
         await update.message.reply_text(msg)
-        await update.message.reply_text("Напиши /catalog для выбора другой категории")
+        await update.message.reply_text("Напиши /catalog для выбора другого товара")
     else:
         await update.message.reply_text("Напиши /catalog для просмотра каталога")
 
