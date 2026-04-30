@@ -1,49 +1,129 @@
 import os
 import asyncio
-from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram import (
+    Update,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton
+)
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    CallbackQueryHandler,
+    ContextTypes
+)
 
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 
 catalog = {
-    "Ajazz AK820 White": {"desc": "Механическая клавиатура с белым корпусом"},
-    "Ajazz AK820 Grey White": {"desc": "Механическая клавиатура серо-белая"},
-    "AJAZZ NK61 Black": {"desc": "Компактная механическая клавиатура черная"},
-    "AJAZZ NK61 White": {"desc": "Компактная механическая клавиатура белая"},
-    "FREEWOLF M75 Grey-White": {"desc": "Игровая механическая клавиатура серо-белая"},
-    "Attack Shark X68 HE": {"desc": "Профессиональная игровая клавиатура"},
+    "1": {
+        "name": "Ajazz AK820 White",
+        "desc": "Механическая клавиатура с белым корпусом",
+        "price": 1500
+    },
+    "2": {
+        "name": "Ajazz AK820 Grey-White",
+        "desc": "Серо-белая версия популярной модели",
+        "price": 1500
+    },
+    "3": {
+        "name": "Ajazz NK61 Black",
+        "desc": "Компактная 60% клавиатура",
+        "price": 1300
+    },
+    "4": {
+        "name": "Ajazz NK61 White",
+        "desc": "Белая компактная клавиатура",
+        "price": 1300
+    },
+    "5": {
+        "name": "Freewolf M75 Grey-White",
+        "desc": "Игровая клавиатура с подсветкой",
+        "price": 1400
+    },
+    "6": {
+        "name": "Attack Shark X68 HE",
+        "desc": "Премиум клавиатура для гейминга",
+        "price": 1800
+    },
 }
-   
 
+# /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Привет! 👋\nНапиши /catalog для просмотра товаров")
+    keyboard = [
+        [InlineKeyboardButton("🛍 Открыть каталог", callback_data="catalog")]
+    ]
+    await update.message.reply_text(
+        "👋 Добро пожаловать в магазин клавиатур",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
 
-async def catalog_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keys = list(catalog.keys())
-    keyboard = [[keys[i], keys[i+1]] for i in range(0, len(keys), 2)]
-    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-    await update.message.reply_text("Выбери категорию:", reply_markup=reply_markup)
+# показать каталог
+async def show_catalog(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
 
-async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
-    if text in catalog:
-        product = catalog[text]
-        msg = f"⌨️ {text}\n\n📝 {product['desc']}"
-        await update.message.reply_text(msg)
-        await update.message.reply_text("Напиши /catalog для выбора другого товара")
-    else:
-        await update.message.reply_text("Напиши /catalog для просмотра каталога")
+    keyboard = []
+    for pid, item in catalog.items():
+        keyboard.append([
+            InlineKeyboardButton(
+                f"{item['name']} — {item['price']} грн",
+                callback_data=f"product_{pid}"
+            )
+        ])
 
+    await query.message.edit_text(
+        "🛍 Каталог товаров:",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+
+# показать товар
+async def show_product(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    pid = query.data.split("_")[1]
+    item = catalog[pid]
+
+    text = (
+        f"⌨️ <b>{item['name']}</b>\n\n"
+        f"📝 {item['desc']}\n\n"
+        f"💰 Цена: {item['price']} грн"
+    )
+
+    keyboard = [
+        [InlineKeyboardButton("🛒 Купить", callback_data=f"buy_{pid}")],
+        [InlineKeyboardButton("⬅️ Назад", callback_data="catalog")]
+    ]
+
+    await query.message.edit_text(
+        text,
+        parse_mode="HTML",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+
+# покупка
+async def buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    pid = query.data.split("_")[1]
+    item = catalog[pid]
+
+    await query.message.edit_text(
+        f"✅ Ты выбрал: {item['name']}\n\n"
+        f"Напиши свой ник и номер для связи 👇"
+    )
+
+# запуск
 async def main():
     app = ApplicationBuilder().token(TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("catalog", catalog_cmd))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle))
 
-    await app.initialize()
-    await app.start()
-    await app.updater.start_polling()
-    await asyncio.Event().wait()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CallbackQueryHandler(show_catalog, pattern="catalog"))
+    app.add_handler(CallbackQueryHandler(show_product, pattern="product_"))
+    app.add_handler(CallbackQueryHandler(buy, pattern="buy_"))
+
+    await app.run_polling()
 
 if __name__ == "__main__":
     asyncio.run(main())
