@@ -3,8 +3,7 @@ import asyncio
 from telegram import (
     Update,
     InlineKeyboardMarkup,
-    InlineKeyboardButton,
-    InputMediaPhoto
+    InlineKeyboardButton
 )
 from telegram.ext import (
     ApplicationBuilder,
@@ -18,7 +17,6 @@ from telegram.ext import (
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 ADMIN_ID = 8294397034
 
-# корзины пользователей
 user_carts = {}
 
 catalog = {
@@ -33,24 +31,26 @@ catalog = {
     "9": {"name": "Attack Shark X8 SE", "desc": "Обновлённая модель", "price": 1250},
 }
 
-# /start
+# ---------------- START ----------------
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("🛍 Каталог", callback_data="catalog")],
         [InlineKeyboardButton("🧺 Корзина", callback_data="cart")],
-        [InlineKeyboardButton("📩 Связаться", url="https://t.me/GameSectorua")]  # поменяй
+        [InlineKeyboardButton("📩 Связаться", url="https://t.me/GameSectorua")]
     ]
+
     await update.message.reply_text(
-        "👋 Добро пожаловать в GameSector ",
+        "👋 Добро пожаловать в GameSector",
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
-# каталог
+# ---------------- CATALOG ----------------
 async def show_catalog(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
     keyboard = []
+
     for pid, item in catalog.items():
         keyboard.append([
             InlineKeyboardButton(
@@ -59,12 +59,16 @@ async def show_catalog(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         ])
 
+    keyboard.append([
+        InlineKeyboardButton("🧺 Корзина", callback_data="cart")
+    ])
+
     await query.message.edit_text(
-        "🛍 Каталог:",
+        "🛍 Каталог товаров:",
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
-# товар
+# ---------------- PRODUCT ----------------
 async def show_product(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -72,10 +76,10 @@ async def show_product(update: Update, context: ContextTypes.DEFAULT_TYPE):
     pid = query.data.split("_")[1]
     item = catalog[pid]
 
-    caption = (
+    text = (
         f"⌨️ <b>{item['name']}</b>\n\n"
         f"📝 {item['desc']}\n\n"
-        f"💰 {item['price']} грн"
+        f"💰 Цена: {item['price']} грн"
     )
 
     keyboard = [
@@ -83,18 +87,31 @@ async def show_product(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("⬅️ Назад", callback_data="catalog")]
     ]
 
+    # попытка отправить фото (если есть)
     try:
-        await query.message.delete()
-        await query.message.chat.send_photo(
-            photo=open(f"images/{pid}.jpg", "rb"),
-            caption=caption,
+        photo_path = f"images/{pid}.jpg"
+        if os.path.exists(photo_path):
+            await query.message.delete()
+            await query.message.chat.send_photo(
+                photo=open(photo_path, "rb"),
+                caption=text,
+                parse_mode="HTML",
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
+        else:
+            await query.message.edit_text(
+                text,
+                parse_mode="HTML",
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
+    except:
+        await query.message.edit_text(
+            text,
             parse_mode="HTML",
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
-    except:
-        await query.message.reply_text(caption)
 
-# добавить в корзину
+# ---------------- ADD TO CART ----------------
 async def add_to_cart(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -104,9 +121,9 @@ async def add_to_cart(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_carts.setdefault(user_id, []).append(pid)
 
-    await query.answer("Добавлено в корзину ✅", show_alert=True)
+    await query.message.reply_text("✅ Добавлено в корзину")
 
-# корзина
+# ---------------- CART ----------------
 async def show_cart(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -135,16 +152,18 @@ async def show_cart(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await query.message.edit_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
 
-# оформление
+# ---------------- CHECKOUT ----------------
 async def checkout(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
-    await query.message.edit_text("📩 Напиши имя и номер телефона:")
-
     context.user_data["waiting_order"] = True
 
-# получение данных
+    await query.message.edit_text(
+        "📩 Введи имя и номер телефона:"
+    )
+
+# ---------------- ORDER HANDLER ----------------
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.user_data.get("waiting_order"):
         return
@@ -157,7 +176,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Корзина пуста")
         return
 
-    text = f"🆕 Новый заказ!\n\n👤 @{user.username}\n📞 {update.message.text}\n\n"
+    order_id = user_id % 100000
+
+    text = f"🆕 Заказ #{order_id}\n\n"
+    text += f"👤 @{user.username}\n📞 {update.message.text}\n\n"
 
     total = 0
     for pid in cart:
@@ -167,25 +189,25 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text += f"\n💰 Итого: {total} грн"
 
-    # отправка тебе
     await context.bot.send_message(ADMIN_ID, text)
 
-    # ответ клиенту
-    await update.message.reply_text("✅ Заказ отправлен! Мы скоро свяжемся с тобой")
+    await update.message.reply_text("✅ Заказ отправлен!")
 
     user_carts[user_id] = []
     context.user_data["waiting_order"] = False
 
-# запуск
+# ---------------- MAIN ----------------
 async def main():
     app = ApplicationBuilder().token(TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
+
     app.add_handler(CallbackQueryHandler(show_catalog, pattern="^catalog$"))
-    app.add_handler(CallbackQueryHandler(show_product, pattern="product_"))
-    app.add_handler(CallbackQueryHandler(add_to_cart, pattern="add_"))
+    app.add_handler(CallbackQueryHandler(show_product, pattern="^product_"))
+    app.add_handler(CallbackQueryHandler(add_to_cart, pattern="^add_"))
     app.add_handler(CallbackQueryHandler(show_cart, pattern="^cart$"))
     app.add_handler(CallbackQueryHandler(checkout, pattern="checkout"))
+
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     await app.run_polling()
