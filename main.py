@@ -18,32 +18,32 @@ catalog = {
     "1": {
         "name": "Ajazz AK820 White",
         "desc": "Механическая клавиатура с белым корпусом",
-        "price": 1500
+        "price": 1450
     },
     "2": {
         "name": "Ajazz AK820 Grey-White",
         "desc": "Серо-белая версия популярной модели",
-        "price": 1500
+        "price": 1450
     },
     "3": {
         "name": "Ajazz NK61 Black",
         "desc": "Компактная 60% клавиатура",
-        "price": 1300
+        "price": 1050
     },
     "4": {
         "name": "Ajazz NK61 White",
         "desc": "Белая компактная клавиатура",
-        "price": 1300
+        "price": 1050
     },
     "5": {
         "name": "Freewolf M75 Grey-White",
         "desc": "Игровая клавиатура с подсветкой",
-        "price": 1400
+        "price": 1050
     },
     "6": {
         "name": "Attack Shark X68 HE",
         "desc": "Премиум клавиатура для гейминга",
-        "price": 1800
+        "price": 2290
     },
 }
 
