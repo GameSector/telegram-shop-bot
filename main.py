@@ -1,5 +1,4 @@
 import os
-import asyncio
 from telegram import (
     Update,
     InlineKeyboardMarkup,
@@ -115,7 +114,7 @@ async def buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 # запуск
-async def main():
+def main():
     app = ApplicationBuilder().token(TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
@@ -123,7 +122,7 @@ async def main():
     app.add_handler(CallbackQueryHandler(show_product, pattern="product_"))
     app.add_handler(CallbackQueryHandler(buy, pattern="buy_"))
 
-    await app.run_polling()
+    app.run_polling()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
