@@ -26,9 +26,9 @@ async def catalog_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     if text in catalog:
-        for product in catalog[text]:
-            msg = f"📦 {product['name']}\n💰 {product['price']}\n📝 {product['desc']}"
-            await update.message.reply_text(msg)
+        product = catalog[text]
+        msg = f"📦 {product['name']}"
+        await update.message.reply_text(msg)
         await update.message.reply_text("Напиши /catalog для выбора другой категории")
     else:
         await update.message.reply_text("Напиши /catalog для просмотра каталога")
